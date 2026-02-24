@@ -2,7 +2,7 @@ import sys
 import os
 
 # Import Scanner from our scanner.py file
-from scanner import Scanner
+from core.scanner import Scanner
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -24,7 +24,6 @@ if __name__ == '__main__':
 
     print(f"Starting lexical analysis for: {file_path}...\n")
     
-    # Use Scanner what I´ve imported before
     scanner = Scanner(source_code)
     scanner.analyze()
     scanner.generate_reports()

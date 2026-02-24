@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import time
-from scanner import Scanner
+from core.scanner import Scanner
 
 st.set_page_config(page_title="Advanced Lexical Analyzer", layout="wide")
 
@@ -13,7 +13,7 @@ def load_css(file_name):
     except FileNotFoundError:
         st.warning(f"No se encontró el archivo {file_name}")
 
-load_css("style.css")
+load_css("assets/style.css")
 
 with st.sidebar:
     st.header("Settings & Upload")

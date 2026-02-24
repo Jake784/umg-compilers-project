@@ -1,8 +1,7 @@
 import re
 import os
 
-# Import the Token class from our other file
-from token_model import Token
+from core.token_model import Token
 
 class Scanner:
     def __init__(self, source_code):
