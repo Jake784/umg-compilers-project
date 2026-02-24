@@ -1,14 +1,14 @@
-# Java Lexical Analyzer (Scanner) 🔍
+# Java Lexical Analyzer (Scanner)
 
 This repository contains Phase 1 of a compiler design project, focusing on the construction of a Lexical Analyzer (Scanner) for a subset of the Java programming language. It is designed to bridge core concepts of Formal Languages and Automata Theory with functional software architecture.
 
-## 🎯 Objectives
+## Objectives
 * **Scanner Implementation:** Recognizes the regular grammar of the language using Regular Expressions.
 * **Token Management:** Classifies input streams into categories (Keywords, Identifiers, Operators, Literals, and Punctuation).
 * **Lexical Error Handling:** Detects invalid characters and accurately reports their exact line and column.
 * **Symbol Table:** Initializes the data structure to store information about found identifiers.
 
-## 📂 Project Structure
+## Project Structure
 The codebase follows a modular architecture, separating the core business logic from the presentation layer:
 
 ```text
