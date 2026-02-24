@@ -1,91 +1,121 @@
 import re
+import sys
+import os
 
 def tokenize(source_code):
-    # 1. Definición de la gramática regular (Expresiones Regulares)
-    # El orden es VITAL: Las palabras reservadas deben ir antes que los identificadores.
-    # (?P<name>pattern) crea un "grupo con nombre" para saber qué token hizo match.
+    # 1. Definición de la gramática regular / Regular Grammar Definition
     token_specification = [
         ('KEYWORD',      r'\b(public|class|static|void|int|String|if|else|while|return)\b'),
+        ('COMMENT',      r'//.*|/\*[\s\S]*?\*/'),         
         ('IDENTIFIER',   r'[a-zA-Z_][a-zA-Z0-9_]*'),
-        ('NUMBER',       r'\d+(\.\d*)?'),                 # Enteros y decimales
+        ('NUMBER',       r'\d+(\.\d*)?'),
+        ('STRING_LIT',   r'"[^"]*"'),
         ('OPERATOR',     r'[+\-*/=<>!]+'),
-        ('PUNCTUATION',  r'[{}();,]'),
-        ('STRING_LIT',   r'"[^"]*"'),                     # Cadenas de texto: "hola"
-        ('COMMENT',      r'//.*|/\*[\s\S]*?\*/'),         # Comentarios de una o múltiples líneas
-        ('NEWLINE',      r'\n'),                          # Salto de línea (para contar)
-        ('SKIP',         r'[ \t]+'),                      # Espacios y tabs (se ignoran)
-        ('MISMATCH',     r'.'),                           # Cualquier otro carácter (Error)
+        ('PUNCTUATION',  r'[{}();,\[\]\.]'),              
+        ('NEWLINE',      r'\n'),
+        ('SKIP',         r'[ \t]+'),
+        ('MISMATCH',     r'.'),
     ]
 
-    # Unimos todas las ER con el operador OR (|) lógico
     tok_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
 
-    # Variables de estado
     line_num = 1
     line_start = 0
-    symbol_table = {} # Diccionario para el requerimiento #4 (Tabla de Símbolos)
+    symbol_table = {}
     found_tokens = []
+    lexical_errors = [] 
 
-    # 2. Procesamiento (El bucle del Scanner)
-    # re.finditer recorre el texto y devuelve objetos "match" cada vez que una ER coincide
+    # 2. Procesamiento / Processing
     for match_obj in re.finditer(tok_regex, source_code):
-        token_type = match_obj.lastgroup  # Nombre del grupo que hizo match (ej. 'KEYWORD')
-        value = match_obj.group()         # El texto exacto que hizo match (ej. 'public')
+        token_type = match_obj.lastgroup
+        value = match_obj.group()
         
-        # Cálculo exacto de la columna
         column = match_obj.start() - line_start + 1
 
         if token_type == 'NEWLINE':
-            line_start = match_obj.end() # Reiniciamos el contador de columnas para la nueva línea
+            line_start = match_obj.end()
             line_num += 1
             continue
         elif token_type == 'SKIP' or token_type == 'COMMENT':
-            # Elementos irrelevantes que se eliminan (Requerimiento de la fase)
             continue
         elif token_type == 'MISMATCH':
-            # 3. Manejo de Errores Léxicos
-            print(f"❌ Lexical Error: Invalid character '{value}' at line {line_num}, column {column}")
+            # 3. Manejo de Errores Léxicos / Lexical Error Handling
+            error_msg = f"Lexical Error: Invalid character '{value}' at line {line_num}, column {column}"
+            print(f"{error_msg}")
+            lexical_errors.append(error_msg)
             continue
 
-        # Guardar el token válido
         found_tokens.append((token_type, value, line_num, column))
 
-        # 4. Tabla de Símbolos
-        # Solo almacenamos los identificadores (nombres de variables, clases, métodos)
+        # 4. Tabla de Símbolos / Symbol Table
         if token_type == 'IDENTIFIER' and value not in symbol_table:
             symbol_table[value] = {
                 'first_appearance_line': line_num
-                # Aquí en el futuro tu analizador sintáctico/semántico agregará el tipo de dato
             }
 
-    return found_tokens, symbol_table
+    return found_tokens, symbol_table, lexical_errors
 
 # ==========================================
-# Pruebas del Scanner / Scanner Tests
+# Ejecución del Programa / Program Execution
 # ==========================================
 if __name__ == '__main__':
-    # Simulamos el contenido de un archivo .txt con código Java
-    sample_java_code = """
-    public class HelloWorld {
-        public static void main(String[] args) {
-            int number = 10;
-            // Esto es un comentario que debe ser ignorado
-            int result = number + 20;
+    if len(sys.argv) < 2:
+        print("Usage: python3 scanner.py <source_file.txt>")
+        sys.exit(1)
+
+    file_path = sys.argv[1]
+
+    if not os.path.isfile(file_path):
+        print(f"Error: The file '{file_path}' was not found.")
+        sys.exit(1)
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            source_code = file.read()
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        sys.exit(1)
+
+    print(f"Starting lexical analysis for: {file_path}...\n")
+    
+    tokens, sym_table, errors = tokenize(source_code)
+
+    # ==========================================
+    # Generación de Reportes / Report Generation
+    # ==========================================
+    
+    # Definir y crear la carpeta de reportes
+    report_dir = 'report-generation'
+    os.makedirs(report_dir, exist_ok=True)
+    
+    # 1. Reporte de Tokens
+    tokens_path = os.path.join(report_dir, 'tokens_report.txt')
+    with open(tokens_path, 'w', encoding='utf-8') as f:
+        f.write(f"{'TYPE':<15} | {'VALUE':<20} | {'LINE':<5} | {'COLUMN'}\n")
+        f.write("-" * 60 + "\n")
+        for t in tokens:
+            f.write(f"{t[0]:<15} | {t[1]:<20} | {t[2]:<5} | {t[3]}\n")
             
-            $invalidCharacter = 5; 
-        }
-    }
-    """
+    # 2. Reporte de Tabla de Símbolos
+    sym_table_path = os.path.join(report_dir, 'symbol_table_report.txt')
+    with open(sym_table_path, 'w', encoding='utf-8') as f:
+        f.write(f"{'IDENTIFIER':<20} | {'FIRST APPEARANCE (LINE)'}\n")
+        f.write("-" * 50 + "\n")
+        for identifier, info in sym_table.items():
+            f.write(f"{identifier:<20} | {info['first_appearance_line']}\n")
 
-    print("Starting lexical analysis...\n")
-    tokens, sym_table = tokenize(sample_java_code)
+    # 3. Reporte de Errores (Solo se crea si hay errores)
+    errors_path = os.path.join(report_dir, 'errors_report.txt')
+    if errors:
+        with open(errors_path, 'w', encoding='utf-8') as f:
+            f.write("--- LEXICAL ERRORS DETECTED ---\n")
+            for error in errors:
+                f.write(error + "\n")
+        print(f"Lexical errors found. Check '{errors_path}' for details.")
+    else:
+        # Borrar el reporte de errores anterior si el código ya no tiene errores
+        if os.path.exists(errors_path):
+            os.remove(errors_path)
+        print("No lexical errors found.")
 
-    print("\n--- FOUND TOKENS ---")
-    print(f"{'TYPE':<15} | {'VALUE':<15} | {'LINE':<5} | {'COLUMN'}")
-    print("-" * 50)
-    for t in tokens:
-        print(f"{t[0]:<15} | {t[1]:<15} | {t[2]:<5} | {t[3]}")
-
-    print("\n--- SYMBOL TABLE (Initial Structure) ---")
-    for identifier, info in sym_table.items():
-        print(f"ID: {identifier:<15} -> {info}")
+    print(f"\nAnalysis complete! Check the generated .txt report files in your '{report_dir}/' folder.")

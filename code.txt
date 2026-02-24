@@ -1,0 +1,14 @@
+public class PruebaAnalizador {
+    public static void main(String args) {
+        int base = 10;
+        int altura = 20; /* Esto es un
+                            comentario multilinea */
+        
+        // El simbolo '@' no pertenece a nuestra gramatica
+        int @area = base * altura;
+        
+        String mensaje = "Calculo terminado";
+        
+        # // Otro caracter invalido
+    }
+}
