@@ -49,7 +49,11 @@ class Scanner:
             self.tokens.append(new_token)
 
             if token_type == 'IDENTIFIER' and value not in self.symbol_table:
-                self.symbol_table[value] = {'first_appearance_line': line_num}
+                self.symbol_table[value] = {
+                    'type': 'Undefined',
+                    'line': line_num,
+                    'column': column
+                }
 
     def generate_reports(self, report_dir='report-generation'):
         os.makedirs(report_dir, exist_ok=True)

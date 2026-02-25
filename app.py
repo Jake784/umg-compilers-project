@@ -6,12 +6,12 @@ from core.scanner import Scanner
 st.set_page_config(page_title="Advanced Lexical Analyzer", layout="wide")
 
 def load_css(file_name):
-    """Abre un archivo CSS y lo inyecta en la aplicación."""
+    """Opens a CSS file and injects it into the application."""
     try:
         with open(file_name, 'r') as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
-        st.warning(f"No se encontró el archivo {file_name}")
+        st.warning(f"File {file_name} was not found.")
 
 load_css("assets/style.css")
 
@@ -55,17 +55,35 @@ if st.button("Run Lexical Analysis", type="primary", use_container_width=True):
             st.metric(label="Lexical Errors", value=error_count, delta="-Needs Fix" if error_count > 0 else "Perfect", delta_color="inverse")
 
         st.divider()
+
+        report_content = f"{'LEXEME (VALUE)':<20} | {'TOKEN (CATEGORY)'}\n"
+        report_content += "-" * 45 + "\n"
+        for t in scanner.tokens:
+            report_content += f"{t.value:<20} | {t.type}\n"
+
+        col_export1, col_export2 = st.columns([1, 2])
+        with col_export1:
+            st.download_button(
+                label="Export Token Report (.txt)",
+                data=report_content,
+                file_name="token_report.txt",
+                mime="text/plain",
+                type="primary"
+            )
+
+        st.divider()
+
         tab1, tab2, tab3 = st.tabs(["Token Stream", "Symbol Table", "Error Report"])
 
         with tab1:
-            tokens_data = [{"Type": t.type, "Value": t.value, "Line": t.line, "Column": t.column} for t in scanner.tokens]
+            tokens_data = [{"Lexeme (Value)": t.value, "Token (Category)": t.type, "Line": t.line, "Column": t.column} for t in scanner.tokens]
             if tokens_data:
                 st.dataframe(pd.DataFrame(tokens_data), use_container_width=True, height=400)
             else:
                 st.info("No valid tokens found.")
 
         with tab2:
-            symbols_data = [{"Identifier": k, "First Appearance (Line)": v['first_appearance_line']} for k, v in scanner.symbol_table.items()]
+            symbols_data = [{"Identifier Name": k, "Type": v['type'], "Line": v['line'], "Column": v['column']} for k, v in scanner.symbol_table.items()]
             if symbols_data:
                 st.dataframe(pd.DataFrame(symbols_data), use_container_width=True)
             else:
