@@ -1,7 +1,6 @@
 import sys
 import os
 
-# Import Scanner from our scanner.py file
 from core.scanner import Scanner
 
 if __name__ == '__main__':

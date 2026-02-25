@@ -27,13 +27,29 @@ with st.sidebar:
 st.title("Lexical Analyzer")
 st.markdown("### Java Subset Scanner")
 
-default_code = ""
+if "code_input" not in st.session_state:
+    st.session_state.code_input = ""
+if "last_uploaded_file" not in st.session_state:
+    st.session_state.last_uploaded_file = None
+
 if uploaded_file is not None:
-    default_code = uploaded_file.getvalue().decode("utf-8")
+    if st.session_state.last_uploaded_file != uploaded_file.name:
+        st.session_state.code_input = uploaded_file.getvalue().decode("utf-8")
+        st.session_state.last_uploaded_file = uploaded_file.name
 
-source_code = st.text_area("Source Code Entry:", value=default_code, height=300)
+def clear_text():
+    st.session_state.code_input = ""
 
-if st.button("Run Lexical Analysis", type="primary", use_container_width=True):
+source_code = st.text_area("Source Code Entry:", key="code_input", height=300)
+
+col_btn1, col_btn2 = st.columns([3, 2])
+
+with col_btn1:
+    run_pressed = st.button("Run Lexical Analysis", type="primary", use_container_width=True)
+with col_btn2:
+    st.button("Clear Code", on_click=clear_text, use_container_width=True)
+
+if run_pressed:
     
     if source_code.strip():
         with st.spinner('Analyzing syntax and generating tokens...'):
@@ -64,7 +80,7 @@ if st.button("Run Lexical Analysis", type="primary", use_container_width=True):
         col_export1, col_export2 = st.columns([1, 2])
         with col_export1:
             st.download_button(
-                label="Export Token Report (.txt)",
+                label="📥 Export Token Report (.txt)",
                 data=report_content,
                 file_name="token_report.txt",
                 mime="text/plain",
