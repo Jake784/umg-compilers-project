@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 from core.scanner import Scanner
+from streamlit_ace import st_ace
 
 st.set_page_config(page_title="Advanced Lexical Analyzer", layout="wide")
 
@@ -40,7 +41,25 @@ if uploaded_file is not None:
 def clear_text():
     st.session_state.code_input = ""
 
-source_code = st.text_area("Source Code Entry:", key="code_input", height=300)
+# ==========================================
+# EDITOR DE CÓDIGO CON HIGHLIGHTING (ACE)
+# ==========================================
+st.markdown("**Source Code Entry:**")
+
+source_code = st_ace(
+    value=st.session_state.code_input,  # Lo conectamos a la memoria para el botón "Clear" y el archivo subido
+    language="java",                    # Le decimos que el lenguaje es Java
+    theme="tomorrow_night",                     # ¡Tema visual idéntico a VS Code!
+    keybinding="vscode",                # Atajos de teclado de VS Code (como Ctrl+Z, Ctrl+F)
+    font_size=14,
+    tab_size=4,
+    height=340,
+    show_gutter=True,                   # Muestra los números de línea a la izquierda
+    auto_update=False                    # Actualiza el valor cada vez que escribes
+)
+
+if source_code != st.session_state.code_input:
+    st.session_state.code_input = source_code
 
 col_btn1, col_btn2 = st.columns([3, 2])
 
@@ -80,7 +99,7 @@ if run_pressed:
         col_export1, col_export2 = st.columns([1, 2])
         with col_export1:
             st.download_button(
-                label="📥 Export Token Report (.txt)",
+                label="Export Token Report (.txt)",
                 data=report_content,
                 file_name="token_report.txt",
                 mime="text/plain",
