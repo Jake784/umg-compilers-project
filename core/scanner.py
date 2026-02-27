@@ -37,8 +37,15 @@ class Scanner:
                 line_start = match_obj.end()
                 line_num += 1
                 continue
+
             elif token_type == 'SKIP' or token_type == 'COMMENT':
+                if token_type == 'COMMENT':
+                    newlines_in_comment = value.count('\n')
+                    if newlines_in_comment > 0:
+                        line_num += newlines_in_comment
+                        line_start = match_obj.start() + value.rfind('\n') + 1
                 continue
+
             elif token_type == 'MISMATCH':
                 error_msg = f"Lexical Error: Invalid character '{value}' at line {line_num}, column {column}"
                 print(f"{error_msg}")

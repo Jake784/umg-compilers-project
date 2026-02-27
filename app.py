@@ -16,49 +16,76 @@ def load_css(file_name):
 
 load_css("assets/style.css")
 
-with st.sidebar:
-    st.header("Settings & Upload")
-    st.markdown("You can type the code directly, or upload a file.")
-    
-    uploaded_file = st.file_uploader("Upload source code", type=["txt", "java"])
-    
-    st.divider()
-    st.info("**Pro Tip:** This scanner detects Keywords, Identifiers, Numbers, Operators, and basic Punctuation in Java.")
-
-st.title("Lexical Analyzer")
-st.markdown("### Java Subset Scanner")
-
+# ==========================================
+# 1. GESTIÓN DEL ESTADO (DEBE IR HASTA ARRIBA)
+# ==========================================
 if "code_input" not in st.session_state:
     st.session_state.code_input = ""
 if "last_uploaded_file" not in st.session_state:
     st.session_state.last_uploaded_file = None
+if "editor_key" not in st.session_state:
+    st.session_state.editor_key = 0
+if "uploader_key" not in st.session_state:   
+    st.session_state.uploader_key = 0        
 
+# ==========================================
+# 2. BARRA LATERAL Y UPLOADER
+# ==========================================
+with st.sidebar:
+    st.header("Settings & Upload")
+    st.markdown("You can type the code directly, or upload a file.")
+    
+    # Ahora sí, la llave ya existe cuando llega a esta línea
+    uploaded_file = st.file_uploader(
+        "Upload source code", 
+        type=["txt", "java"], 
+        key=f"uploader_{st.session_state.uploader_key}"
+    )
+    
+    st.divider()
+    st.info("**Pro Tip:** This scanner detects Keywords, Identifiers, Numbers, Operators, and basic Punctuation in Java.")
+
+# ==========================================
+# 3. LÓGICA DE ARCHIVOS Y LIMPIEZA
+# ==========================================
+# Si el usuario hace clic en la 'X' para quitar un archivo subido
+if uploaded_file is None:
+    st.session_state.last_uploaded_file = None
+
+# Si se sube un archivo nuevo, actualizamos el texto y forzamos el reinicio del editor
 if uploaded_file is not None:
     if st.session_state.last_uploaded_file != uploaded_file.name:
         st.session_state.code_input = uploaded_file.getvalue().decode("utf-8")
         st.session_state.last_uploaded_file = uploaded_file.name
+        st.session_state.editor_key += 1
 
+# Función ÚNICA para limpiar la interfaz
 def clear_text():
     st.session_state.code_input = ""
+    st.session_state.last_uploaded_file = None
+    st.session_state.editor_key += 1
+    st.session_state.uploader_key += 1  
 
 # ==========================================
-# EDITOR DE CÓDIGO CON HIGHLIGHTING (ACE)
+# 4. INTERFAZ PRINCIPAL
 # ==========================================
+st.title("Lexical Analyzer")
+st.markdown("### Java Subset Scanner")
 st.markdown("**Source Code Entry:**")
 
 source_code = st_ace(
-    value=st.session_state.code_input,  # Lo conectamos a la memoria para el botón "Clear" y el archivo subido
-    language="java",                    # Le decimos que el lenguaje es Java
-    theme="tomorrow_night",                     # ¡Tema visual idéntico a VS Code!
-    keybinding="vscode",                # Atajos de teclado de VS Code (como Ctrl+Z, Ctrl+F)
+    value=st.session_state.code_input,
+    language="java",
+    theme="tomorrow_night",
+    key=f"ace_editor_{st.session_state.editor_key}",  
     font_size=14,
     tab_size=4,
     height=340,
-    show_gutter=True,                   # Muestra los números de línea a la izquierda
-    auto_update=False                    # Actualiza el valor cada vez que escribes
+    show_gutter=True,
+    auto_update=False
 )
 
-if source_code != st.session_state.code_input:
+if source_code != st.session_state.code_input and source_code is not None:
     st.session_state.code_input = source_code
 
 col_btn1, col_btn2 = st.columns([3, 2])
@@ -68,8 +95,10 @@ with col_btn1:
 with col_btn2:
     st.button("Clear Code", on_click=clear_text, use_container_width=True)
 
+# ==========================================
+# 5. ANÁLISIS Y RESULTADOS
+# ==========================================
 if run_pressed:
-    
     if source_code.strip():
         with st.spinner('Analyzing syntax and generating tokens...'):
             time.sleep(0.5)
