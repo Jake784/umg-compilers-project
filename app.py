@@ -17,7 +17,7 @@ def load_css(file_name):
 load_css("assets/style.css")
 
 # ==========================================
-# 1. GESTIÓN DEL ESTADO (DEBE IR HASTA ARRIBA)
+# STATE MANAGEMENT
 # ==========================================
 if "code_input" not in st.session_state:
     st.session_state.code_input = ""
@@ -29,13 +29,12 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0        
 
 # ==========================================
-# 2. BARRA LATERAL Y UPLOADER
+# SIDE BAR AND UPLOADER
 # ==========================================
 with st.sidebar:
     st.header("Settings & Upload")
     st.markdown("You can type the code directly, or upload a file.")
     
-    # Ahora sí, la llave ya existe cuando llega a esta línea
     uploaded_file = st.file_uploader(
         "Upload source code", 
         type=["txt", "java"], 
@@ -46,20 +45,17 @@ with st.sidebar:
     st.info("**Pro Tip:** This scanner detects Keywords, Identifiers, Numbers, Operators, and basic Punctuation in Java.")
 
 # ==========================================
-# 3. LÓGICA DE ARCHIVOS Y LIMPIEZA
+# FILE LOGIC AND CLEANUP
 # ==========================================
-# Si el usuario hace clic en la 'X' para quitar un archivo subido
 if uploaded_file is None:
     st.session_state.last_uploaded_file = None
 
-# Si se sube un archivo nuevo, actualizamos el texto y forzamos el reinicio del editor
 if uploaded_file is not None:
     if st.session_state.last_uploaded_file != uploaded_file.name:
         st.session_state.code_input = uploaded_file.getvalue().decode("utf-8")
         st.session_state.last_uploaded_file = uploaded_file.name
         st.session_state.editor_key += 1
 
-# Función ÚNICA para limpiar la interfaz
 def clear_text():
     st.session_state.code_input = ""
     st.session_state.last_uploaded_file = None
@@ -67,7 +63,7 @@ def clear_text():
     st.session_state.uploader_key += 1  
 
 # ==========================================
-# 4. INTERFAZ PRINCIPAL
+# MAIN INTERFACE
 # ==========================================
 st.title("Lexical Analyzer")
 st.markdown("### Java Subset Scanner")
@@ -78,7 +74,7 @@ source_code = st_ace(
     language="java",
     theme="tomorrow_night",
     key=f"ace_editor_{st.session_state.editor_key}",  
-    font_size=14,
+    font_size=13,
     tab_size=4,
     height=340,
     show_gutter=True,
@@ -96,7 +92,7 @@ with col_btn2:
     st.button("Clear Code", on_click=clear_text, use_container_width=True)
 
 # ==========================================
-# 5. ANÁLISIS Y RESULTADOS
+# ANALYSIS AND RESULTS
 # ==========================================
 if run_pressed:
     if source_code.strip():
