@@ -94,14 +94,27 @@ class Parser:
         self.match('KEYWORD', 'public')
         self.match('KEYWORD', 'static')
         self.match('KEYWORD', 'void')
-        self.match('KEYWORD', 'main')
+        
+        # Bulletproof check for 'main' (ignores if Phase 1 called it Keyword or Identifier)
+        if self.current_token and self.current_token.value == 'main':
+            self.advance()
+        else:
+            self.report_error(f"Expected 'main' but found '{self.current_token.value if self.current_token else 'EOF'}'")
+            
         self.match('PUNCTUATION', '(')
-        self.match('IDENTIFIER', 'String')
+        
+        # Bulletproof check for 'String'
+        if self.current_token and self.current_token.value == 'String':
+            self.advance()
+        else:
+            self.report_error(f"Expected 'String' but found '{self.current_token.value if self.current_token else 'EOF'}'")
+            
         self.match('PUNCTUATION', '[')
         self.match('PUNCTUATION', ']')
         
+        # Args identifier (like 'args')
         if self.current_token and self.current_token.type == 'IDENTIFIER':
-            self.advance() # Skip args identifier
+            self.advance() 
         else:
             self.report_error("Expected 'args' identifier")
             

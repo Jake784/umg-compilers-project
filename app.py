@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 import time
+import graphviz # New import for Graphviz visualization
 from core.scanner import Scanner
-from core.parser import Parser  # <--- NUEVA IMPORTACIÓN
+from core.parser import Parser  # New import for the Parser class
 from streamlit_ace import st_ace
 
 st.set_page_config(page_title="Compiler: Lexical & Syntax Analyzer", layout="wide")
@@ -18,24 +19,59 @@ def load_css(file_name):
 load_css("assets/style.css")
 
 # ==========================================
-# AST HELPER FUNCTION (For Hierarchy Panel)
+# GRAPHVIZ AST GENERATOR
 # ==========================================
-def ast_to_dict(node):
-    """Recursively converts AST nodes into a dictionary for expandable tree visualization."""
-    if node is None:
-        return None
-    if isinstance(node, list):
-        return [ast_to_dict(n) for n in node]
-    
-    # If it's a primitive value (string, int), return it directly
-    if not hasattr(node, '__dict__'):
-        return node
+def generate_ast_graph(node, graph=None, node_id="root"):
+    """Recursively parses the AST and builds a visual Graphviz tree."""
+    if graph is None:
+        graph = graphviz.Digraph()
+        # Estilo visual de los nodos (puedes cambiar los colores)
+        graph.attr('node', shape='box', style='rounded,filled', fillcolor='#1E293B', fontcolor='white', color='#38BDF8')
+        graph.attr('edge', color='#94A3B8')
 
-    # If it's an AST node, convert its attributes
-    result = {"NodeType": node.__class__.__name__}
-    for key, value in vars(node).items():
-        result[key] = ast_to_dict(value)
-    return result
+    if node is None:
+        return graph
+
+    # If the node is a list of statements, create a subgraph for it
+    # Si es una lista de instrucciones (ej. dentro de un Block)
+    if isinstance(node, list):
+        # CORRECCIÓN: Usamos exactamente el node_id que el padre está buscando
+        graph.node(node_id, label="Statements", shape='folder', fillcolor='#475569')
+        for i, stmt in enumerate(node):
+            child_id = f"{node_id}_stmt_{i}"
+            generate_ast_graph(stmt, graph, child_id)
+            graph.edge(node_id, child_id)
+        return graph
+
+    # If the node is a primitive value (plain text)
+    if not hasattr(node, '__dict__'):
+        graph.node(node_id, label=str(node), shape='ellipse', fillcolor='#10B981')
+        return graph
+
+    # Process AST Nodes
+    node_label = node.__class__.__name__.replace('Node', '')
+    
+    # special handling for certain node types to include operator or value in the label
+    if node_label == 'BinOp':
+        node_label = f"BinOp\n({node.operator})"
+    elif node_label in ['Number', 'String', 'Identifier', 'VarDecl']:
+        val = getattr(node, 'value', getattr(node, 'name', getattr(node, 'identifier', '')))
+        node_label = f"{node_label}\n'{val}'"
+
+    graph.node(node_id, label=node_label)
+
+    # Connect child nodes
+    for i, (key, value) in enumerate(vars(node).items()):
+        if key == 'operator' and node.__class__.__name__ == 'BinOpNode':
+            continue # already included in label
+        if value is None or (isinstance(value, list) and len(value) == 0):
+            continue # skip empty fields
+            
+        child_id = f"{node_id}_{key}_{i}"
+        generate_ast_graph(value, graph, child_id)
+        graph.edge(node_id, child_id, label=key, fontsize='10', fontcolor='#94A3B8')
+
+    return graph
 
 # ==========================================
 # STATE MANAGEMENT
@@ -156,9 +192,10 @@ if run_pressed:
         ])
 
         with tab1:
-            st.markdown("#### Abstract Syntax Tree (AST)")
+            st.markdown("#### Abstract Syntax Tree (Visual Graph)")
             if ast:
-                st.json(ast_to_dict(ast), expanded=True)
+                ast_graph = generate_ast_graph(ast)
+                st.graphviz_chart(ast_graph, use_container_width=True)
             else:
                 st.info("AST could not be generated due to fatal structural errors.")
 
