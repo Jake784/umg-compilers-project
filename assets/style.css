@@ -6,3 +6,7 @@
 [data-testid="stSidebar"] {
     transition: all 0.1s ease-in-out;
 }
+
+section[data-testid="stSidebar"] {
+    min-width: 300px !important;
+}
