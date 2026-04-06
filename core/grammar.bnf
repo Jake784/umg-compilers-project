@@ -1,0 +1,46 @@
+// ============================================================================
+// Phase 2: EBNF Grammar for Java Subset
+// Defines the syntactic rules for the Recursive Descent Parser
+// ============================================================================
+
+<Program>           ::= <ClassDeclaration>
+
+<ClassDeclaration>  ::= "public" "class" IDENTIFIER "{" <MainMethod> "}"
+
+<MainMethod>        ::= "public" "static" "void" "main" "(" "String" "[" "]" IDENTIFIER ")" <Block>
+
+<Block>             ::= "{" <Statement>* "}"
+
+<Statement>         ::= <VariableDecl> 
+                      | <Assignment> 
+                      | <IfStatement> 
+                      | <WhileStatement> 
+                      | <Block>
+
+<VariableDecl>      ::= <Type> IDENTIFIER "=" <Expression> ";"
+
+<Type>              ::= "int" | "float" | "String" | "boolean"
+
+<Assignment>        ::= IDENTIFIER "=" <Expression> ";"
+
+<IfStatement>       ::= "if" "(" <Expression> ")" <Block> ( "else" <Block> )?
+
+<WhileStatement>    ::= "while" "(" <Expression> ")" <Block>
+
+// ============================================================================
+// EXPRESSIONS & OPERATOR PRECEDENCE
+// The deeper the rule, the higher the precedence.
+// ============================================================================
+
+<Expression>        ::= <LogicalExpr>
+
+<LogicalExpr>       ::= <AdditiveExpr> ( ( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <AdditiveExpr> )*
+
+<AdditiveExpr>      ::= <MultiplicativeExpr> ( ( "+" | "-" ) <MultiplicativeExpr> )*
+
+<MultiplicativeExpr>::= <PrimaryExpr> ( ( "*" | "/" ) <PrimaryExpr> )*
+
+<PrimaryExpr>       ::= NUMBER 
+                      | STRING_LITERAL 
+                      | IDENTIFIER 
+                      | "(" <Expression> ")"
