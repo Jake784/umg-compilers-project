@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 import time
-import graphviz # New import for Graphviz visualization
+import graphviz 
 from core.scanner import Scanner
-from core.parser import Parser  # New import for the Parser class
+from core.parser import Parser
 from streamlit_ace import st_ace
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Compiler: Lexical & Syntax Analyzer", layout="wide")
 
@@ -25,17 +26,39 @@ def generate_ast_graph(node, graph=None, node_id="root"):
     """Recursively parses the AST and builds a visual Graphviz tree."""
     if graph is None:
         graph = graphviz.Digraph()
-        # Estilo visual de los nodos (puedes cambiar los colores)
-        graph.attr('node', shape='box', style='rounded,filled', fillcolor='#1E293B', fontcolor='white', color='#38BDF8')
-        graph.attr('edge', color='#94A3B8')
+        
+        graph.attr(bgcolor='transparent')
+        
+        graph.attr('node', 
+                   shape='box', 
+                   style='rounded,filled', 
+                   fillcolor='#1E293B',
+                   fontcolor='#F8FAFC',    
+                   color='#38BDF8',       
+                   fontname='Courier',    
+                   penwidth='1.5')
+                   
+        graph.attr('edge', 
+                   color='#64748B',        
+                   fontcolor='#94A3B8',    
+                   fontname='Courier',
+                   fontsize='10',
+                   penwidth='1.2')
 
-    if node is None:
+    if isinstance(node, list):
+        graph.node(node_id, label="Statements", shape='folder', fillcolor='#334155', color='#94A3B8')
+        for i, stmt in enumerate(node):
+            child_id = f"{node_id}_stmt_{i}"
+            generate_ast_graph(stmt, graph, child_id)
+            graph.edge(node_id, child_id)
+        return graph
+
+    if not hasattr(node, '__dict__'):
+        graph.node(node_id, label=str(node), shape='ellipse', fillcolor='#064E3B', color='#10B981')
         return graph
 
     # If the node is a list of statements, create a subgraph for it
-    # Si es una lista de instrucciones (ej. dentro de un Block)
     if isinstance(node, list):
-        # CORRECCIÓN: Usamos exactamente el node_id que el padre está buscando
         graph.node(node_id, label="Statements", shape='folder', fillcolor='#475569')
         for i, stmt in enumerate(node):
             child_id = f"{node_id}_stmt_{i}"
@@ -122,7 +145,7 @@ def clear_text():
 # ==========================================
 # MAIN INTERFACE
 # ==========================================
-st.title("Compiler Frontend")
+st.title("Compiler: Lexical & Syntax Analyzer")
 st.markdown("### Scanner & Parser (Java Subset)")
 st.markdown("**Source Code Entry:**")
 
@@ -192,10 +215,50 @@ if run_pressed:
         ])
 
         with tab1:
-            st.markdown("#### Abstract Syntax Tree (Visual Graph)")
+            st.markdown("#### Abstract Syntax Tree (Interactive Graph)")
             if ast:
                 ast_graph = generate_ast_graph(ast)
-                st.graphviz_chart(ast_graph, use_container_width=True)
+                try:
+                    svg_string = ast_graph.pipe(format='svg').decode('utf-8')
+                    
+                    html_code = f"""
+                    <div style="position: relative; width: 100%; height: 500px; border: 1px solid #334155; border-radius: 8px; background-color: #1E293B; overflow: hidden;">
+                        
+                        <div id="svg-container" style="width: 100%; height: 100%;">
+                            {svg_string}
+                        </div>
+                        
+                        <div style="position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 10;">
+                            <button onclick="window.panZoom.zoomIn()" style="background: #FF4B4B; color: #FFFFFF; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 28px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; display: flex; justify-content: center; align-items: center; padding: 0; line-height: 1;">+</button>
+                            <button onclick="window.panZoom.zoomOut()" style="background: #FF4B4B; color: #FFFFFF; border: none; width: 40px; height: 40px; border-radius: 8px; font-size: 28px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; display: flex; justify-content: center; align-items: center; padding: 0; line-height: 1;">-</button>
+                            <button onclick="window.panZoom.resetZoom(); window.panZoom.center();" style="background: #475569; color: #FFFFFF; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-weight: bold; letter-spacing: 1px; display: flex; justify-content: center; align-items: center;">RESET</button>
+                        </div>
+
+                    </div>
+                    
+                    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+                    <script>
+                        window.onload = function() {{
+                            var svgElement = document.querySelector('#svg-container svg');
+                            svgElement.style.width = '100%';
+                            svgElement.style.height = '100%';
+                            
+                            window.panZoom = svgPanZoom(svgElement, {{
+                                zoomEnabled: true,
+                                controlIconsEnabled: false,
+                                fit: true,
+                                center: true,
+                                minZoom: 0.05,   
+                                maxZoom: 50,              
+                                zoomScaleSensitivity: 0.6
+                            }});
+                        }};
+                    </script>
+                    """
+                    components.html(html_code, height=520)
+                except Exception as e:
+                    st.error(f"Interactive viewer error: {e}")
+                    st.graphviz_chart(ast_graph, use_container_width=True)
             else:
                 st.info("AST could not be generated due to fatal structural errors.")
 

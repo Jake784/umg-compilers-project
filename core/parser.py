@@ -265,5 +265,5 @@ class Parser:
             return expr
         else:
             self.report_error(f"Invalid primary expression: '{token.value}'")
-            self.advance() # Prevent infinite loop
+            self.advance()
             return None

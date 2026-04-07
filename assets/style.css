@@ -10,3 +10,123 @@
 section[data-testid="stSidebar"] {
     min-width: 300px !important;
 }
+
+/* =========================================
+   1. CLEAN APP INTERFACE (HIDDEN NATIVE UI)
+   ========================================= */
+/* Hide Streamlit top menu, header, and footer */
+#MainMenu { visibility: hidden; }
+header { visibility: hidden; }
+footer { visibility: hidden; }
+
+/* Adjust top padding since header is hidden */
+.block-container {
+    padding-top: 2rem !important;
+}
+
+/* =========================================
+   2. PREMIUM METRICS CARDS
+   ========================================= */
+/* Style the metric boxes (Total Tokens, Errors, etc.) */
+[data-testid="stMetric"] {
+    background-color: #1E293B; 
+    border: 1px solid #334155; 
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+/* Hover effect: lift up and glow border */
+[data-testid="stMetric"]:hover {
+    transform: translateY(-4px);
+    border-color: #38BDF8;
+}
+
+/* =========================================
+   3. MODERN BUTTONS WITH HOVER EFFECTS
+   ========================================= */
+/* Main buttons style */
+.stButton > button {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease !important;
+}
+
+/* Primary Button glow effect on hover */
+.stButton > button[kind="primary"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 75, 75, 0.4) !important;
+}
+
+/* Secondary Button (Clear Code) hover */
+.stButton > button[kind="secondary"]:hover {
+    border-color: #94A3B8 !important;
+    color: #F8FAFC !important;
+}
+
+/* =========================================
+   4. CUSTOM IDE SCROLLBARS
+   ========================================= */
+/* Slim, modern scrollbars for all scrollable containers */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #64748B;
+}
+
+/* =========================================
+   5. VS CODE STYLE TABS
+   ========================================= */
+/* Style the tabs container */
+[data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: transparent;
+}
+/* Style individual tabs */
+[data-baseweb="tab"] {
+    background-color: #1E293B;
+    border-radius: 8px 8px 0px 0px;
+    padding: 10px 20px;
+    border: 1px solid #334155;
+    border-bottom: none;
+}
+/* Hover effect for tabs */
+[data-baseweb="tab"]:hover {
+    background-color: #334155;
+}
+[data-baseweb="tab-highlight"] {
+    display: none; /* Hide default Streamlit underline */
+}
+
+/* =========================================
+   6. CLEANER TERMINAL ALERTS
+   ========================================= */
+/* Refine error/warning boxes to look like console outputs */
+[data-testid="stAlert"] {
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   7. ANTI-FLASH TRICK FOR ACE EDITOR
+   ========================================= */
+iframe {
+    background-color: #1d1f21 !important;
+    color-scheme: dark;
+}
+
+[data-testid="stIFrame"] {
+    background-color: #1d1f21 !important;
+}
