@@ -24,8 +24,6 @@ public class PruebaDeFuego {
         // 6. COMBO (LÉXICO + SINTÁCTICO): Símbolo extraño (~) y operador colgante (+)
         int locuraTotal = 50 + ~ ;
 
-        // 7. RECUPERACIÓN FINAL: Si el nodo de esta variable aparece en tu gráfico interactivo, 
-        // tu compilador es oficialmente indestructible.
         boolean compiladorSobrevive = true;
     }
 }
